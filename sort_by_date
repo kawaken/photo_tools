@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [ $# -lt 2 ]; then
+  echo "Usage $0 TARGET_PHOTOS_DIR OUTPUT_DIR"
+  exit 1
+fi
+
+TARGET_PHOTOS_DIR=$(cd $1;pwd)
+if [ ! -d "$TARGET_PHOTOS_DIR" ]; then
+  echo "$TARGET_PHOTOS_DIR does not exist!"
+  exit 1
+fi
+OUTPUT_DIR=$(cd $2;pwd)
+DATE_FORMAT='%Y年%m月%d日'
+
+for photo in `find $TARGET_PHOTOS_DIR -type f -name "*.*"`
+do
+  exif_date=`exiftool -DateTimeOriginal -d $DATE_FORMAT $photo | sed -e 's/ //g' | cut -d ':' -f 2`
+  output_sub_dir="$OUTPUT_DIR/$exif_date"
+  if [ ! -d "$output_sub_dir" ]; then
+    mkdir "$output_sub_dir"
+  fi
+  
+  bn=`basename $photo`
+  if [ -f "$output_sub_dir/$bn" ]; then
+    echo "Skip: $photo"
+    continue
+  fi
+  
+  echo "cp $photo $output_sub_dir"
+  cp $photo $output_sub_dir
+
+done
+
+# vim : set ft=sh
